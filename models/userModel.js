@@ -41,6 +41,15 @@ const userSchema = new mongoose.Schema({
       // required: true,
     },
   },
+
+  myBlogs: [
+    {
+      blog: {
+        type: mongoose.Schema.ObjectId,
+        ref: "Product",
+      },
+    },
+  ],
   savedBlogs: [
     {
       blog: {
