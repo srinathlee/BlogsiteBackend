@@ -29,18 +29,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please Enter User Password"],
     minlength: [8, "password should be greaterthan 8 characters"],
-    select: false,
+    select: false
   },
-  avatar: {
-    public_id: {
-      type: String,
-      // required: true,
+  image: {
+    type:String
     },
-    url: {
-      type: String,
-      // required: true,
-    },
-  },
 
   myBlogs: [
     {
@@ -50,15 +43,9 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
-  savedBlogs: [
-    {
-      blog: {
-        type: mongoose.Schema.ObjectId,
-        ref: "Product",
-      },
-    },
-  ],
-  likedBlogs: [
+  followers: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
+  following: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
+  savedBlogs: [ 
     {
       blog: {
         type: mongoose.Schema.ObjectId,

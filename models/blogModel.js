@@ -9,10 +9,6 @@ const blog = new mongoose.Schema({
     type: String,
     required: [true, "please enter content of blog"],
   },
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: "User",
-  },
   image: {
     type: String,
   },
@@ -44,13 +40,12 @@ const blog = new mongoose.Schema({
       },
     },
   ],
-  noOfReviews: {
+  noOfComments: {
     type: Number,
     default: 0,
   },
-  noOfLikes: {
-    type: Number,
-    default: 0,
+  creatorName:{
+    type:String,
   },
   createdBy: {
     type: mongoose.Schema.ObjectId,
@@ -61,3 +56,5 @@ const blog = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+export default mongoose.model("Blogs",blog)
