@@ -9,6 +9,7 @@ export const CreateBlog = async (req, res) => {
   const { title, content, category, image } = req.body;
   const createdBy = req.user.id;
   const creatorName = req.user.name;
+  console.log(category);
 
   try {
     const blog = await Blogs.create({
@@ -29,18 +30,40 @@ export const CreateBlog = async (req, res) => {
 
 export const GetBlog = async (req, res) => {
   const { id } = req.params;
-  const {image,name,_id}=req.user
-  const CreatorDetails={creatorImg:image,creatorName:name,creatorId:_id}
+  const { image, name, _id } = req.user;
+  const CreatorDetails = {
+    creatorImg: image,
+    creatorName: name,
+    creatorId: _id,
+  };
   try {
     const blog = await Blogs.findById(id);
     if (blog) {
-      const category=blog.category
+      // Fetch the actual creator's details using creatorId from the blog
+      const creator = await User.findById(blog.createdBy).select(
+        "name image _id"
+      );
+
+      // Format CreatorDetails as requested
+      const CreatorDetails = {
+        creatorImg: creator.image,
+        creatorName: creator.name,
+        creatorId: creator._id,
+      };
+
+      const category = blog.category;
       const likes = await Like.find({ blog: id });
       const LikesCount = likes.length;
       const recomends = await Recomendations(category, id);
       res
         .status(200)
-        .json({ blog, recomendations: recomends, likes, LikesCount,CreatorDetails });
+        .json({
+          blog,
+          recomendations: recomends,
+          likes,
+          LikesCount,
+          CreatorDetails,
+        });
     } else {
       res.status(403).json({ message: "no blog found" });
     }
@@ -53,7 +76,13 @@ export const GetBlog = async (req, res) => {
 
 export const GetAllBlogs = async (req, res) => {
   try {
-    const blogs = await Blogs.find();
+    const { categories } = req.query;
+    let filter = {};
+    if (categories) {
+      const cats = categories.split(",");
+      filter.category = { $in: cats };
+    }
+    const blogs = await Blogs.find(filter);
     res.status(200).json({ blogs });
   } catch (error) {
     res.status(403).json({ message: error.message });
@@ -66,30 +95,37 @@ export const WriteComment = async (req, res) => {
   const { message } = req.body;
   const blogId = req.params.id;
   const { id, name } = req.user;
+
   const comment = {
     user: id,
     message,
     name,
   };
+
   try {
     const blog = await Blogs.findById(blogId);
-    // checking weather user already wrote review or not________
-    const isCommented = blog.comments.find((rev) => {
-      return rev.user.toString() == req.user.id;
-    });
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    // Check if user already commented
+    const isCommented = blog.comments.find((rev) => rev.user.toString() === id);
 
     if (isCommented) {
+      // Update existing comment
       blog.comments.forEach((rev) => {
-        if (rev.user.toString() === req.user.id) {
+        if (rev.user.toString() === id) {
           rev.message = message;
         }
       });
     } else {
+      // Add new comment
       blog.comments.push(comment);
     }
-    // no of reviews calculation
+
     blog.noOfComments = blog.comments.length;
     await blog.save({ validateBeforeSave: false });
+
     res.status(200).json({ message: "comment successful" });
   } catch (error) {
     res.status(403).json({ message: error.message });
@@ -148,14 +184,14 @@ export const userLikeBlogs = async (req, res) => {
     console.log(likeEntries);
 
     // Extract blog IDs
-    const blogIds = likeEntries.map(entry => entry.blog);
-    
+    const blogIds = likeEntries.map((entry) => entry.blog);
+
     if (blogIds.length > 0) {
       // Find blogs by IDs
-      const blogPromises = blogIds.map(id => Blogs.findById(id));
+      const blogPromises = blogIds.map((id) => Blogs.findById(id));
       const blogs = await Promise.all(blogPromises);
       console.log(blogs);
-      
+
       return res.status(200).json({ message: "Liked blogs", blogs });
     }
 

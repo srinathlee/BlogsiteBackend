@@ -9,17 +9,17 @@ import e from "express";
 
 export const Register = async (req, res) => {
   const { name, email, password, number } = req.body;
-  console.log(req.body)
+
   try {
     const user = await User.findOne({ email });
-    console.log(user);
+
     if (user == null) {
       const hasedpassword = await bcrypt.hash(password, 10);
       const newuser = { name, email, password: hasedpassword, number };
       const user = await User.create(newuser);
       const payload={email,id:user.id}
       const jwtToken=jwt.sign(payload,"jadlfkjasdlkfjaslkdflakjsfl")
-      res.status(200).send({ message: "user registered successfully",jwtToken});
+      res.status(200).send({ message: "user registered successfully",jwtToken,user});
     } else {    
       res.status(403).send({ error: "user already exists" });
     }
@@ -61,7 +61,6 @@ export const Login = async (req, res, next) => {
 export const userDetails=async(req,res,next)=>{
   const user=await User.findById(req.user.id)
   const blogs=await Blog.find({createdBy:user.id})
-  console.log(blogs)
   if(!user){
     return next(new errorHandler("Login to access this resource",400))
   }
@@ -72,7 +71,6 @@ export const userUpdate = async (req, res) => {
   try {
     const id = req.user.id; // Assumes user ID is provided in req.user
     const data = req.body; // The updated user data
-    console.log(data)
 
     // Update the user document in the database
     const updatedUser = await User.findByIdAndUpdate(id, { ...data }, { new: true });
@@ -99,7 +97,7 @@ export const updateFollowing = async (req, res) => {
   try {
     const  userId = req.user._id;
     const { userIdToUpdate, action } = req.body; // action: 'follow' or 'unfollow'
-    console.log(action)
+   
 
     if (action !== 'follow' && action !== 'unfollow') {
       return res.status(400).json({ message: 'Invalid action' });
@@ -107,14 +105,13 @@ export const updateFollowing = async (req, res) => {
 
     const user = await User.findById(userId);
     const userToUpdate = await User.findById(userIdToUpdate);
-    //console.log(user,userToUpdate)
+
 
     if (!user || !userToUpdate) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     if (action === 'follow') {
-      // console.log(user.following)
       if (user.following.includes(userIdToUpdate)) {
         return res.status(400).json({ message: 'Already following this user' });
       }
@@ -131,7 +128,10 @@ export const updateFollowing = async (req, res) => {
     }
 
     if (action === 'unfollow') {
+      console.log(!user.following.includes(userIdToUpdate));
+   
       if (!user.following.includes(userIdToUpdate)) {
+
         return res.status(400).json({ message: 'Not following this user' });
       }
 
