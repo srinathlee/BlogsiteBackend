@@ -32,7 +32,7 @@ export const Register = async (req, res) => {
 
 export const Login = async (req, res, next) => {
   const { email, password } = req.body;
-
+ console.log(email,password)
   if (email == "" || password == "") {
     // return next(new errorHandler("Enter Email and Password", 403));
     return res.status(403).json({ message: "Enter Email and Password" });
