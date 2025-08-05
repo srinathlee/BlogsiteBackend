@@ -128,7 +128,6 @@ export const updateFollowing = async (req, res) => {
     }
 
     if (action === 'unfollow') {
-      console.log(!user.following.includes(userIdToUpdate));
    
       if (!user.following.includes(userIdToUpdate)) {
 

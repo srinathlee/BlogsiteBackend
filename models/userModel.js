@@ -23,11 +23,20 @@ const userSchema = new mongoose.Schema({
       },
       message: (props) => `${props.value} is not a valid 10-digit number!`,
     },
-    required: true,
+  required: function () {
+    return !this.googleId;
+  }
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows for multiple users with no googleId
   },
   password: {
     type: String,
-    required: [true, "Please Enter User Password"],
+    required:function () {
+    return !this.googleId;
+  },
     minlength: [8, "password should be greaterthan 8 characters"],
     select: false
   },
